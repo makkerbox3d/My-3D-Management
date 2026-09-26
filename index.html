@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Impressão 3D - Gestão & Precificação</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#111827', 950: '#030712' },
+                        brand: { 50: '#f0f3ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0b0f19; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        .tab-btn.active {
+            color: #818cf8;
+            border-bottom-color: #6366f1;
+            background-color: rgba(99, 102, 241, 0.05);
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header Principal -->
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-xl text-white shadow-lg shadow-indigo-500/20">
+                    <i data-lucide="box" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 bg-clip-text text-transparent">App Impressão 3D</h1>
+                    <p class="text-[11px] text-slate-400 font-medium">Sistema de Gestão & Precificação Profissional</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button onclick="resetData()" class="px-3 py-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-slate-800">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                    <span class="hidden sm:inline">Redefinir Dados</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Navegação em Abas -->
+        <nav class="flex overflow-x-auto border-t border-slate-800/60 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 no-scrollbar">
+            <button onclick="switchTab('tabelasFixas', this)" class="tab-btn active border-b-2 border-indigo-500 text-indigo-400 py-3 px-4 font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition">
+                <i data-lucide="sliders" class="w-4 h-4"></i> Tabelas Fixas
+            </button>
+            <button onclick="switchTab('equipamentos', this)" class="tab-btn border-b-2 border-transparent text-slate-400 hover:text-slate-200 py-3 px-4 font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition">
+                <i data-lucide="printer" class="w-4 h-4"></i> Equipamentos
+            </button>
+            <button onclick="switchTab('almoxarifado', this)" class="tab-btn border-b-2 border-transparent text-slate-400 hover:text-slate-200 py-3 px-4 font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition">
+                <i data-lucide="boxes" class="w-4 h-4"></i> Almoxarifado
+            </button>
+            <button onclick="switchTab('cadastroProcesso', this)" class="tab-btn border-b-2 border-transparent text-slate-400 hover:text-slate-200 py-3 px-4 font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Cadastro de Processo
+            </button>
+            <button onclick="switchTab('vitrine', this)" class="tab-btn border-b-2 border-transparent text-slate-400 hover:text-slate-200 py-3 px-4 font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition">
+                <i data-lucide="store" class="w-4 h-4"></i> Vitrine
+            </button>
+            <button onclick="switchTab('pedidos', this)" class="tab-btn border-b-2 border-transparent text-slate-400 hover:text-slate-200 py-3 px-4 font-semibold text-sm whitespace-nowrap flex items-center gap-2 transition">
+                <i data-lucide="shopping-bag" class="w-4 h-4"></i> Pedidos
+            </button>
+        </nav>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- ================= ABA 1: TABELAS FIXAS ================= -->
+        <section id="tab-tabelasFixas" class="tab-content space-y-6">
+            <div class="border-b border-slate-800 pb-4 flex justify-between items-end">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-2.5">
+                        <i data-lucide="sliders" class="text-indigo-400 w-6 h-6"></i> Tabelas Fixas
+                    </h2>
+                    <p class="text-sm text-slate-400 mt-1">Parâmetros financeiros, impostos, taxas operacionais, taxas de complexidade e metas do negócio.</p>
+                </div>
+            </div>
+
+            <form id="tabelasFixasForm" onsubmit="saveTabelasFixas(event)" class="space-y-6">
+                <div>
+                    <h3 class="text-base font-bold text-slate-200 mb-3 flex items-center gap-2">
+                        <i data-lucide="percent" class="w-4 h-4 text-indigo-400"></i> Taxas Operacionais & Impostos
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-2 shadow-lg">
+                            <label class="block text-sm font-semibold text-slate-200">Taxa de Devolução / Perdas (%)</label>
+                            <input type="number" step="0.1" id="taxaDevolucao" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 font-medium" required>
+                        </div>
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-2 shadow-lg">
+                            <label class="block text-sm font-semibold text-slate-200">Taxa de Imposto / Tributos (%)</label>
+                            <input type="number" step="0.1" id="taxaImposto" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 font-medium" required>
+                        </div>
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-2 shadow-lg">
+                            <label class="block text-sm font-semibold text-slate-200">Custos Fixos de Embalagem / Envio (R$)</label>
+                            <input type="number" step="0.1" id="custoEmbalagemEnvio" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 font-medium" required>
+                        </div>
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-2 shadow-lg">
+                            <label class="block text-sm font-semibold text-slate-200">Comissão de Venda / Plataforma (%)</label>
+                            <input type="number" step="0.1" id="comissaoVenda" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 font-medium" required>
+                        </div>
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-2 shadow-lg">
+                            <label class="block text-sm font-semibold text-slate-200">Taxa de Cartão / Gateway (%)</label>
+                            <input type="number" step="0.1" id="taxaCartao" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 font-medium" required>
+                        </div>
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-2 shadow-lg">
+                            <label class="block text-sm font-semibold text-slate-200">Encargos Sociais (%)</label>
+                            <input type="number" step="0.5" id="encargosSociais" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 font-medium" required>
+                        </div>
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-indigo-500/30 space-y-2 shadow-lg bg-indigo-950/10">
+                            <label class="block text-sm font-bold text-indigo-300">Fundo de Investimento da Empresa (%)</label>
+                            <input type="number" step="0.5" id="taxaReinvestimento" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 font-bold" required>
+                        </div>
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-2 shadow-lg border-l-4 border-l-emerald-500">
+                            <label class="block text-sm font-bold text-emerald-400">Lucro Líquido Desejado (%)</label>
+                            <input type="number" step="0.5" id="lucroLiquidoDesejado" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-emerald-500 font-bold" required>
+                        </div>
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-2 shadow-lg">
+                            <label class="block text-sm font-semibold text-slate-200">Horas Trabalhadas p/ Pessoa/Mês</label>
+                            <input type="number" step="1" id="horasTrabalhadasMes" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 font-medium" required>
+                        </div>
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-2 shadow-lg">
+                            <label class="block text-sm font-semibold text-slate-200">Tarifa de Energia (R$/kWh)</label>
+                            <input type="number" step="0.01" id="tarifaEnergia" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 font-medium" required>
+                        </div>
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-2 shadow-lg">
+                            <label class="block text-sm font-semibold text-slate-200">Custo Mão de Obra (R$/Hora)</label>
+                            <input type="number" step="0.5" id="custoMaoObraHora" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 font-medium" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800">
+                    <h3 class="text-base font-bold text-slate-200 mb-1 flex items-center gap-2">
+                        <i data-lucide="layers" class="w-4 h-4 text-purple-400"></i> Taxas de Complexidade (%)
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-300">Baixa / Simples (%)</label>
+                            <input type="number" step="1" id="compBaixa" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500" required>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-300">Média / Detalhada (%)</label>
+                            <input type="number" step="1" id="compMedia" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500" required>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-300">Alta / Complexa (%)</label>
+                            <input type="number" step="1" id="compAlta" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500" required>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-300">Ultra / Escultura (%)</label>
+                            <input type="number" step="1" id="compUltra" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-2">
+                    <button type="submit" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-2 cursor-pointer transition">
+                        <i data-lucide="save" class="w-4 h-4"></i> Salvar Tabelas Fixas
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- ================= ABA 2: EQUIPAMENTOS ================= -->
+        <section id="tab-equipamentos" class="tab-content space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-2.5">
+                        <i data-lucide="printer" class="text-indigo-400 w-6 h-6"></i> Equipamentos
+                    </h2>
+                    <p class="text-sm text-slate-400 mt-1">Cadastro de Impressoras 3D e Equipamentos de Apoio / Pós-processamento.</p>
+                </div>
+                <button onclick="openModalEquipamento()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-indigo-600/25 flex items-center gap-2 transition cursor-pointer">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Novo Equipamento
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+                    <i data-lucide="printer" class="w-5 h-5 text-indigo-400"></i> Impressoras 3D (FDM / SLA / Resina)
+                </h3>
+                <div id="gridImpressoras" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+
+            <div class="space-y-4 pt-4 border-t border-slate-800">
+                <h3 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-purple-400"></i> Equipamentos Extras
+                </h3>
+                <div id="gridEquipamentosExtras" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+        </section>
+
+        <!-- ================= ABA 3: ALMOXARIFADO ================= -->
+        <section id="tab-almoxarifado" class="tab-content space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-2.5">
+                        <i data-lucide="boxes" class="text-indigo-400 w-6 h-6"></i> Almoxarifado
+                    </h2>
+                    <p class="text-sm text-slate-400 mt-1">Matéria-prima e Insumos / Consumíveis extras.</p>
+                </div>
+                <button onclick="openModalInsumo()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-indigo-600/25 flex items-center gap-2 transition cursor-pointer">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Novo Insumo / Matéria-Prima
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+                    <i data-lucide="layers" class="w-5 h-5 text-emerald-400"></i> Filamentos & Resinas
+                </h3>
+                <div id="gridMateriasPrimas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+
+            <div class="space-y-4 pt-4 border-t border-slate-800">
+                <h3 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+                    <i data-lucide="package" class="w-5 h-5 text-amber-400"></i> Insumos Extras & Consumíveis
+                </h3>
+                <div id="gridInsumosExtras" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+        </section>
+
+        <!-- ================= ABA 4: CADASTRO DE PROCESSO ================= -->
+        <section id="tab-cadastroProcesso" class="tab-content space-y-6 hidden">
+            <div class="border-b border-slate-800 pb-4">
+                <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-2.5">
+                    <i data-lucide="file-spreadsheet" class="text-indigo-400 w-6 h-6"></i> Cadastro de Processo & Precificação
+                </h2>
+                <p class="text-sm text-slate-400 mt-1">Ficha técnica de fabricação e cálculo detalhado de custos e preço de venda.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Formulário -->
+                <div class="lg:col-span-7 bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-5 shadow-xl">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Nome do Produto / Projeto</label>
+                            <input type="text" id="procNome" placeholder="Ex: Suporte de Headset / Figure Homem de Ferro" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium">
+                        </div>
+
+                        <div class="sm:col-span-2 bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                            <label class="block text-xs font-semibold text-slate-300">Foto / Imagem do Produto</label>
+                            <div class="flex items-center gap-4">
+                                <div id="previewProcFoto" class="w-16 h-16 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+                                    <i data-lucide="image" class="w-6 h-6 text-slate-600"></i>
+                                </div>
+                                <div class="flex-1 space-y-2">
+                                    <input type="file" id="procFotoFile" accept="image/*" onchange="handleProcessImageUpload(event)" class="block w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+                                    <input type="text" id="procFotoUrl" oninput="handleProcessImageUrlInput(this.value)" placeholder="ou cole o link da imagem (URL)" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Tipo de Processo</label>
+                            <select id="procTipoProcesso" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium" onchange="calcularPrecificacaoProcesso()">
+                                <option value="FDM">Impressão FDM (Filamento)</option>
+                                <option value="SLA">Impressão SLA / LCD (Resina)</option>
+                                <option value="Hibrido">Híbrido / Completo</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Quantidade de Peças / Lote</label>
+                            <input type="number" min="1" id="procQtdPecas" value="1" oninput="calcularPrecificacaoProcesso()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Impressora 3D Principal</label>
+                            <select id="procImpressora" onchange="calcularPrecificacaoProcesso()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium"></select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Equipamento Extra</label>
+                            <select id="procEquipExtra" onchange="calcularPrecificacaoProcesso()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium"></select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Tempo Impressão (Horas/Min)</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="flex items-center gap-1">
+                                    <input type="number" min="0" id="procTempoImpHoras" value="5" oninput="calcularPrecificacaoProcesso()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium text-center">
+                                    <span class="text-xs text-slate-400 font-bold">h</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <input type="number" min="0" max="59" id="procTempoImpMinutos" value="30" oninput="calcularPrecificacaoProcesso()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium text-center">
+                                    <span class="text-xs text-slate-400 font-bold">m</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Tempo Equipamento Extra (Minutos)</label>
+                            <div class="flex items-center gap-1">
+                                <input type="number" min="0" id="procTempoExtraMinutos" value="15" oninput="calcularPrecificacaoProcesso()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium text-center">
+                                <span class="text-xs text-slate-400 font-bold">min</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Matéria-Prima</label>
+                            <select id="procMateriaPrima" onchange="calcularPrecificacaoProcesso()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium"></select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Consumo (Gramas ou mL)</label>
+                            <input type="number" min="0" step="1" id="procConsumoMat" value="120" oninput="calcularPrecificacaoProcesso()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Mão de Obra (Prep, Pintura, etc)</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="flex items-center gap-1">
+                                    <input type="number" min="0" id="procTempoMaoHoras" value="0" oninput="calcularPrecificacaoProcesso()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium text-center">
+                                    <span class="text-xs text-slate-400 font-bold">h</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <input type="number" min="0" max="59" id="procTempoMaoMinutos" value="45" oninput="calcularPrecificacaoProcesso()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium text-center">
+                                    <span class="text-xs text-slate-400 font-bold">m</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Perda / Suportes (%)</label>
+                            <input type="number" min="0" step="1" id="procPerdaPct" value="10" oninput="calcularPrecificacaoProcesso()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium">
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Nível de Complexidade</label>
+                            <select id="procComplexidade" onchange="calcularPrecificacaoProcesso()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium">
+                                <option value="baixa">Baixa / Peça Simples</option>
+                                <option value="media" selected>Média / Detalhada</option>
+                                <option value="alta">Alta / Complexa</option>
+                                <option value="ultra">Ultra / Escultura</option>
+                            </select>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-xs font-semibold text-slate-300">Categoria na Vitrine</label>
+                                <button type="button" onclick="alternarModoCategoria()" id="btnAlternarCategoria" class="text-[11px] text-indigo-400 hover:text-indigo-300 underline font-medium">
+                                    + Criar Nova Categoria
+                                </button>
+                            </div>
+                            <!-- Seleção das categorias pré-existentes -->
+                            <select id="procCategoriaSelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium">
+                                <option value="Geek & Figures">Geek & Figures</option>
+                                <option value="Acessórios Tech">Acessórios Tech</option>
+                            </select>
+                            <!-- Input para nova categoria (inicialmente oculta) -->
+                            <input type="text" id="procCategoriaInput" placeholder="Digite o nome da nova categoria..." class="hidden w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm font-medium mt-1">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-800 pt-4 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                                <i data-lucide="package-check" class="w-4 h-4 text-amber-400"></i> Insumos Extras Utilizados
+                            </h4>
+                            <span class="text-[11px] text-slate-500">Ajuste as quantidades</span>
+                        </div>
+                        <div id="containerInsumosExtrasUsados" class="bg-slate-950 rounded-xl p-3 border border-slate-800 max-h-48 overflow-y-auto space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- Resumo com Discriminação Detalhada -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4 shadow-xl sticky top-24">
+                        <h3 class="text-base font-bold text-slate-100 border-b border-slate-800 pb-2.5 flex items-center gap-2">
+                            <i data-lucide="calculator" class="w-5 h-5 text-indigo-400"></i> Detalhamento do Cálculo
+                        </h3>
+                        
+                        <div class="space-y-3 text-xs">
+                            <!-- CUSTOS DIRETO DISCRIMINADOS -->
+                            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-400 block border-b border-slate-900 pb-1">
+                                    Detalhamento de Custos Diretos
+                                </span>
+                                <div class="flex justify-between text-slate-300">
+                                    <span>Matéria-Prima:</span>
+                                    <span id="detCustoMat">R$ 0,00</span>
+                                </div>
+                                <div class="flex justify-between text-slate-300">
+                                    <span>Energia Impressora:</span>
+                                    <span id="detCustoEnergiaImp">R$ 0,00</span>
+                                </div>
+                                <div class="flex justify-between text-purple-300">
+                                    <span>Energia Equip. Extra:</span>
+                                    <span id="detCustoEnergiaExtra">R$ 0,00</span>
+                                </div>
+                                <div class="flex justify-between text-slate-300">
+                                    <span>Depreciação Impressora:</span>
+                                    <span id="detCustoDepreciacaoImp">R$ 0,00</span>
+                                </div>
+                                <div class="flex justify-between text-purple-300">
+                                    <span>Depreciação Equip. Extra:</span>
+                                    <span id="detCustoDepreciacaoExtra">R$ 0,00</span>
+                                </div>
+                                <div class="flex justify-between text-slate-300">
+                                    <span>Insumos Extras:</span>
+                                    <span id="detCustoInsumos">R$ 0,00</span>
+                                </div>
+                                <div class="flex justify-between text-slate-300">
+                                    <span>Mão de Obra (+ Encargos):</span>
+                                    <span id="detCustoMaoObra">R$ 0,00</span>
+                                </div>
+                                <div class="flex justify-between text-slate-400 pt-1 border-t border-slate-900 text-[11px]">
+                                    <span>Adicional Complexidade (<span id="resProcComplexidadePct">0%</span>):</span>
+                                    <span id="resProcComplexidadeVal" class="text-slate-300 font-medium">R$ 0,00</span>
+                                </div>
+                                <div class="flex justify-between font-bold text-slate-100 pt-1 border-t border-slate-800">
+                                    <span>Custo de Produção Total:</span>
+                                    <span id="resProcCustoTotal" class="text-indigo-400">R$ 0,00</span>
+                                </div>
+                            </div>
+
+                            <!-- TAXAS E IMPOSTOS -->
+                            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block border-b border-slate-900 pb-1">
+                                    Taxas Fixas & Impostos
+                                </span>
+                                <div class="flex justify-between text-slate-400">
+                                    <span>Impostos (<span id="lblTaxaImposto">0%</span>):</span>
+                                    <span id="resTaxaImposto" class="text-slate-300">R$ 0,00</span>
+                                </div>
+                                <div class="flex justify-between text-slate-400">
+                                    <span>Comissão Plataforma (<span id="lblTaxaComissao">0%</span>):</span>
+                                    <span id="resTaxaComissao" class="text-slate-300">R$ 0,00</span>
+                                </div>
+                                <div class="flex justify-between text-slate-400">
+                                    <span>Taxa Cartão (<span id="lblTaxaCartao">0%</span>):</span>
+                                    <span id="resTaxaCartao" class="text-slate-300">R$ 0,00</span>
+                                </div>
+                                <div class="flex justify-between text-slate-400">
+                                    <span>Taxa Devolução (<span id="lblTaxaDevolucao">0%</span>):</span>
+                                    <span id="resTaxaDevolucao" class="text-slate-300">R$ 0,00</span>
+                                </div>
+                                <div class="flex justify-between text-slate-400">
+                                    <span>Embalagem / Envio:</span>
+                                    <span id="resCustoEmbalagem" class="text-slate-300">R$ 0,00</span>
+                                </div>
+                            </div>
+
+                            <!-- RETORNO FINANCEIRO -->
+                            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
+                                <div class="flex justify-between text-indigo-300 font-semibold">
+                                    <span>Fundo de Investimento (<span id="lblTaxaReinvestimento">0%</span>):</span>
+                                    <span id="resTaxaReinvestimento">R$ 0,00</span>
+                                </div>
+                                <div class="flex justify-between text-emerald-400 font-bold">
+                                    <span>Lucro Líquido Real (<span id="lblTaxaLucro">0%</span>):</span>
+                                    <span id="resProcLucroLiquidoVal">R$ 0,00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card de Preço Sugerido -->
+                        <div class="bg-gradient-to-br from-indigo-950/80 to-slate-950 p-3.5 rounded-xl border border-indigo-500/30 text-center space-y-1">
+                            <span class="text-[11px] font-semibold text-indigo-300 uppercase tracking-wider block">Preço de Venda Sugerido (Unitário)</span>
+                            <div id="resProcPrecoFinalUnitario" class="text-2xl font-extrabold text-white">R$ 0,00</div>
+                        </div>
+
+                        <button onclick="salvarProcessoEVitrine()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition cursor-pointer">
+                            <i data-lucide="store" class="w-5 h-5"></i> Cadastrar e Publicar na Vitrine
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= ABA 5: VITRINE ================= -->
+        <section id="tab-vitrine" class="tab-content space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-2.5">
+                        <i data-lucide="store" class="text-indigo-400 w-6 h-6"></i> Vitrine de Produtos
+                    </h2>
+                    <p class="text-sm text-slate-400 mt-1">Catálogo de peças prontas para venda rápida e geração de pedidos.</p>
+                </div>
+                <button onclick="switchTab('cadastroProcesso', document.querySelectorAll('.tab-btn')[3])" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-indigo-600/25 flex items-center gap-2 transition cursor-pointer">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Precificar Novo Produto
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-lg">
+                <div class="sm:col-span-7 md:col-span-8 relative">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" id="vitrineBuscaNome" oninput="renderVitrine()" placeholder="Buscar produto pelo nome..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="sm:col-span-5 md:col-span-4 relative">
+                    <i data-lucide="filter" class="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <select id="vitrineFiltroCategoria" onchange="renderVitrine()" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500">
+                        <option value="todas">Todas as Categorias</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="gridVitrine" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+        </section>
+
+        <!-- ================= ABA 6: PEDIDOS ================= -->
+        <section id="tab-pedidos" class="tab-content space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-100 flex items-center gap-2.5">
+                        <i data-lucide="shopping-bag" class="text-indigo-400 w-6 h-6"></i> Gestão de Pedidos
+                    </h2>
+                    <p class="text-sm text-slate-400 mt-1">Acompanhamento de orçamentos, produção, entregas e faturamento total.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-1">
+                    <span class="text-xs font-semibold text-slate-400">Faturamento Total</span>
+                    <div id="statFaturamento" class="text-2xl font-extrabold text-indigo-400">R$ 0,00</div>
+                </div>
+                <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-1">
+                    <span class="text-xs font-semibold text-slate-400">Lucro Líquido Estimado</span>
+                    <div id="statLucroTotal" class="text-2xl font-extrabold text-emerald-400">R$ 0,00</div>
+                </div>
+                <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-1">
+                    <span class="text-xs font-semibold text-slate-400">Pedidos Em Produção</span>
+                    <div id="statEmProducao" class="text-2xl font-extrabold text-amber-400">0</div>
+                </div>
+                <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-1">
+                    <span class="text-xs font-semibold text-slate-400">Pedidos Concluídos</span>
+                    <div id="statConcluidos" class="text-2xl font-extrabold text-sky-400">0</div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-950 text-xs font-semibold uppercase text-slate-400 border-b border-slate-800">
+                            <tr>
+                                <th class="px-6 py-4">Cliente</th>
+                                <th class="px-6 py-4">Produto</th>
+                                <th class="px-6 py-4">Qtd</th>
+                                <th class="px-6 py-4">Valor Total</th>
+                                <th class="px-6 py-4">Lucro Líquido</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaPedidosCorpo" class="divide-y divide-slate-800/60"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modais -->
+    <div id="modalEquipamento" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 id="modalEquipamentoTitulo" class="text-lg font-bold text-slate-100">Novo Equipamento</h3>
+                <button onclick="closeModal('modalEquipamento')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="formEquipamento" onsubmit="salvarEquipamento(event)" class="space-y-4">
+                <input type="hidden" id="equipId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Nome do Equipamento</label>
+                    <input type="text" id="equipNome" placeholder="Ex: Bambu Lab X1C" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Categoria / Tipo</label>
+                    <select id="equipCategoria" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm">
+                        <option value="Impressora 3D">Impressora 3D</option>
+                        <option value="Equipamento Extra">Equipamento Extra</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Valor de Compra (R$)</label>
+                        <input type="number" step="0.01" id="equipValorCompra" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Vida Útil (Horas)</label>
+                        <input type="number" id="equipVidaUtilHoras" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Consumo Elétrico (Watts)</label>
+                    <input type="number" id="equipConsumoWatts" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm" required>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeModal('modalEquipamento')" class="px-4 py-2 rounded-xl text-slate-400 hover:bg-slate-800 text-xs font-semibold">Cancelar</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl text-xs font-semibold transition">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalInsumo" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 id="modalInsumoTitulo" class="text-lg font-bold text-slate-100">Novo Insumo</h3>
+                <button onclick="closeModal('modalInsumo')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="formInsumo" onsubmit="salvarInsumo(event)" class="space-y-4">
+                <input type="hidden" id="insumoId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Nome do Item</label>
+                    <input type="text" id="insumoNome" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Tipo de Item</label>
+                    <select id="insumoTipo" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm">
+                        <option value="MateriaPrima">Matéria-Prima (Filamento / Resina)</option>
+                        <option value="Extra">Insumo Extra / Consumível</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Preço Pago (R$)</label>
+                        <input type="number" step="0.01" id="insumoPreco" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Qtd Comprada</label>
+                        <input type="number" step="0.01" id="insumoQtdComprada" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Unidade</label>
+                        <select id="insumoUnidade" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm">
+                            <option value="g">Gramas (g)</option>
+                            <option value="ml">Mililitros (mL)</option>
+                            <option value="un">Unidades (un)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Estoque Atual</label>
+                        <input type="number" step="0.01" id="insumoEstoque" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm" required>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeModal('modalInsumo')" class="px-4 py-2 rounded-xl text-slate-400 hover:bg-slate-800 text-xs font-semibold">Cancelar</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl text-xs font-semibold transition">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalPedido" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-lg font-bold text-slate-100">Gerar Novo Pedido</h3>
+                <button onclick="closeModal('modalPedido')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="formPedido" onsubmit="salvarNovoPedido(event)" class="space-y-4">
+                <input type="hidden" id="pedProdId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Produto Selecionado</label>
+                    <input type="text" id="pedProdNome" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-slate-400 text-sm font-semibold" readonly>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Nome do Cliente</label>
+                    <input type="text" id="pedCliente" placeholder="Ex: João da Silva" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm" required>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Quantidade</label>
+                        <input type="number" min="1" id="pedQtd" value="1" oninput="atualizarResumoPedido()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Preço Unitário (R$)</label>
+                        <input type="number" step="0.01" id="pedPrecoUnit" oninput="atualizarResumoPedido()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500 text-sm" required>
+                    </div>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs space-y-1">
+                    <div class="flex justify-between text-slate-400">
+                        <span>Valor Total do Pedido:</span>
+                        <span id="pedResumoTotal" class="text-indigo-400 font-bold">R$ 0,00</span>
+                    </div>
+                    <div class="flex justify-between text-slate-400">
+                        <span>Lucro Líquido Estimado:</span>
+                        <span id="pedResumoLucro" class="text-emerald-400 font-bold">R$ 0,00</span>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeModal('modalPedido')" class="px-4 py-2 rounded-xl text-slate-400 hover:bg-slate-800 text-xs font-semibold">Cancelar</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl text-xs font-semibold transition">Criar Pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Script de Lógica -->
+    <script>
+        const defaultData = {
+            tabelasFixas: {
+                taxaDevolucao: 2.5,
+                taxaImposto: 6.0,
+                custoEmbalagemEnvio: 5.0,
+                comissaoVenda: 12.0,
+                lucroLiquidoDesejado: 25.0,
+                horasTrabalhadasMes: 160,
+                taxaCartao: 3.5,
+                encargosSociais: 15.0,
+                taxaReinvestimento: 5.0,
+                tarifaEnergia: 0.85,
+                custoMaoObraHora: 25.0,
+                complexidades: { baixa: 10, media: 20, alta: 40, ultra: 50 }
+            },
+            equipamentos: [
+                { id: 'eq1', nome: 'Bambu Lab P1S', categoria: 'Impressora 3D', valorCompra: 5500, vidaUtilHoras: 6000, consumoWatts: 300 },
+                { id: 'eq2', nome: 'Creality Ender 3 V3', categoria: 'Impressora 3D', valorCompra: 1800, vidaUtilHoras: 4000, consumoWatts: 250 },
+                { id: 'eq3', nome: 'Elegoo Wash & Cure', categoria: 'Equipamento Extra', valorCompra: 1200, vidaUtilHoras: 3000, consumoWatts: 80 }
+            ],
+            almoxarifado: [
+                { id: 'alm1', nome: 'PLA Creality Preto (1kg)', tipo: 'MateriaPrima', preco: 110, qtdComprada: 1000, unidade: 'g', estoque: 850 },
+                { id: 'alm2', nome: 'Resina Elegoo Grey (1L)', tipo: 'MateriaPrima', preco: 140, qtdComprada: 1000, unidade: 'ml', estoque: 1000 },
+                { id: 'alm3', nome: 'Lixa d\'água Grão 400', tipo: 'Extra', preco: 3.5, qtdComprada: 1, unidade: 'un', estoque: 15 },
+                { id: 'alm4', nome: 'Primer Spray Cinza', tipo: 'Extra', preco: 32.0, qtdComprada: 1, unidade: 'un', estoque: 3 }
+            ],
+            vitrine: [
+                {
+                    id: 'vit1',
+                    nome: 'Suporte de Headset RGB Gamer',
+                    categoria: 'Acessórios Tech',
+                    foto: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=400&q=80',
+                    custoBase: 18.50,
+                    precoFinal: 48.00,
+                    lucroLiquido: 12.00,
+                    estoque: 6
+                }
+            ],
+            pedidos: [
+                {
+                    id: 'ped1',
+                    cliente: 'TechStore Informática',
+                    produtoNome: 'Suporte de Headset RGB Gamer',
+                    qtd: 2,
+                    precoUnitario: 48.00,
+                    valorTotal: 96.00,
+                    lucroLiquidoTotal: 24.00,
+                    status: 'Em Produção',
+                    data: '2026-09-25'
+                }
+            ]
+        };
+
+        let appData = JSON.parse(localStorage.getItem('appImpressao3D_Data')) || defaultData;
+        let tempProcessImage = '';
+        let criandoNovaCategoria = false;
+
+        if (!appData.tabelasFixas.complexidades) {
+            appData.tabelasFixas.complexidades = { baixa: 10, media: 20, alta: 40, ultra: 50 };
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function saveData() {
+            localStorage.setItem('appImpressao3D_Data', JSON.stringify(appData));
+        }
+
+        function resetData() {
+            if (confirm("Deseja redefinir todos os dados para o padrão inicial?")) {
+                appData = JSON.parse(JSON.stringify(defaultData));
+                saveData();
+                location.reload();
+            }
+        }
+
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-indigo-500', 'text-indigo-400');
+                btn.classList.add('border-transparent', 'text-slate-400');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            if (btnElement) {
+                btnElement.classList.add('active', 'border-indigo-500', 'text-indigo-400');
+                btnElement.classList.remove('border-transparent', 'text-slate-400');
+            }
+
+            if (tabId === 'tabelasFixas') loadTabelasFixas();
+            if (tabId === 'equipamentos') renderEquipamentos();
+            if (tabId === 'almoxarifado') renderAlmoxarifado();
+            if (tabId === 'cadastroProcesso') popularSelectsProcesso();
+            if (tabId === 'vitrine') {
+                atualizarOpcoesCategoriasVitrine();
+                renderVitrine();
+            }
+            if (tabId === 'pedidos') renderPedidos();
+            
+            lucide.createIcons();
+        }
+
+        function loadTabelasFixas() {
+            const tf = appData.tabelasFixas;
+            document.getElementById('taxaDevolucao').value = tf.taxaDevolucao;
+            document.getElementById('taxaImposto').value = tf.taxaImposto;
+            document.getElementById('custoEmbalagemEnvio').value = tf.custoEmbalagemEnvio;
+            document.getElementById('comissaoVenda').value = tf.comissaoVenda;
+            document.getElementById('lucroLiquidoDesejado').value = tf.lucroLiquidoDesejado;
+            document.getElementById('horasTrabalhadasMes').value = tf.horasTrabalhadasMes;
+            document.getElementById('taxaCartao').value = tf.taxaCartao;
+            document.getElementById('encargosSociais').value = tf.encargosSociais;
+            document.getElementById('taxaReinvestimento').value = tf.taxaReinvestimento;
+            document.getElementById('tarifaEnergia').value = tf.tarifaEnergia;
+            document.getElementById('custoMaoObraHora').value = tf.custoMaoObraHora;
+
+            const comp = tf.complexidades || { baixa: 10, media: 20, alta: 40, ultra: 50 };
+            document.getElementById('compBaixa').value = comp.baixa;
+            document.getElementById('compMedia').value = comp.media;
+            document.getElementById('compAlta').value = comp.alta;
+            document.getElementById('compUltra').value = comp.ultra;
+        }
+
+        function recalcularPrecosVitrine() {
+            const tf = appData.tabelasFixas;
+            const somaTaxasPct = tf.taxaImposto + tf.comissaoVenda + tf.taxaCartao + tf.taxaDevolucao + tf.taxaReinvestimento;
+            const divisorTaxas = 1 - (somaTaxasPct / 100);
+
+            appData.vitrine.forEach(prod => {
+                const custoComEmbalagem = prod.custoBase + tf.custoEmbalagemEnvio;
+                const valorLucro = custoComEmbalagem * (tf.lucroLiquidoDesejado / 100);
+                
+                let novoPreco = 0;
+                if (divisorTaxas > 0) {
+                    novoPreco = (custoComEmbalagem + valorLucro) / divisorTaxas;
+                } else {
+                    novoPreco = (custoComEmbalagem + valorLucro) * 1.5;
+                }
+
+                prod.precoFinal = novoPreco;
+                prod.lucroLiquido = valorLucro;
+            });
+        }
+
+        function saveTabelasFixas(e) {
+            e.preventDefault();
+            appData.tabelasFixas = {
+                taxaDevolucao: parseFloat(document.getElementById('taxaDevolucao').value) || 0,
+                taxaImposto: parseFloat(document.getElementById('taxaImposto').value) || 0,
+                custoEmbalagemEnvio: parseFloat(document.getElementById('custoEmbalagemEnvio').value) || 0,
+                comissaoVenda: parseFloat(document.getElementById('comissaoVenda').value) || 0,
+                lucroLiquidoDesejado: parseFloat(document.getElementById('lucroLiquidoDesejado').value) || 0,
+                horasTrabalhadasMes: parseFloat(document.getElementById('horasTrabalhadasMes').value) || 160,
+                taxaCartao: parseFloat(document.getElementById('taxaCartao').value) || 0,
+                encargosSociais: parseFloat(document.getElementById('encargosSociais').value) || 0,
+                taxaReinvestimento: parseFloat(document.getElementById('taxaReinvestimento').value) || 0,
+                tarifaEnergia: parseFloat(document.getElementById('tarifaEnergia').value) || 0,
+                custoMaoObraHora: parseFloat(document.getElementById('custoMaoObraHora').value) || 0,
+                complexidades: {
+                    baixa: parseFloat(document.getElementById('compBaixa').value) || 10,
+                    media: parseFloat(document.getElementById('compMedia').value) || 20,
+                    alta: parseFloat(document.getElementById('compAlta').value) || 40,
+                    ultra: parseFloat(document.getElementById('compUltra').value) || 50
+                }
+            };
+
+            recalcularPrecosVitrine();
+            saveData();
+            alert("Parâmetros salvos com sucesso! Preços na vitrine foram atualizados.");
+            calcularPrecificacaoProcesso();
+        }
+
+        // ================= EQUIPAMENTOS =================
+        function renderEquipamentos() {
+            const gridImpressoras = document.getElementById('gridImpressoras');
+            const gridExtras = document.getElementById('gridEquipamentosExtras');
+
+            gridImpressoras.innerHTML = '';
+            gridExtras.innerHTML = '';
+
+            const impressoras = appData.equipamentos.filter(e => e.categoria === 'Impressora 3D');
+            const extras = appData.equipamentos.filter(e => e.categoria === 'Equipamento Extra');
+
+            if (impressoras.length === 0) {
+                gridImpressoras.innerHTML = `<div class="col-span-full p-6 text-center text-slate-500 bg-slate-900/50 rounded-xl border border-slate-800">Nenhuma impressora 3D cadastrada.</div>`;
+            } else {
+                impressoras.forEach(eq => {
+                    const custoHoraDeprec = (eq.valorCompra / (eq.vidaUtilHoras || 1)).toFixed(2);
+                    gridImpressoras.innerHTML += `
+                        <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl flex flex-col justify-between space-y-4">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-bold text-slate-100 text-lg">${eq.nome}</h4>
+                                    <span class="text-[10px] bg-indigo-500/10 text-indigo-400 font-bold px-2 py-1 rounded-md border border-indigo-500/20">FDM/SLA</span>
+                                </div>
+                                <div class="mt-3 space-y-1.5 text-xs text-slate-400">
+                                    <div class="flex justify-between"><span>Valor Compra:</span> <span class="text-slate-200 font-semibold">R$ ${eq.valorCompra.toFixed(2)}</span></div>
+                                    <div class="flex justify-between"><span>Vida Útil:</span> <span class="text-slate-200 font-semibold">${eq.vidaUtilHoras} hrs</span></div>
+                                    <div class="flex justify-between"><span>Consumo:</span> <span class="text-slate-200 font-semibold">${eq.consumoWatts} W</span></div>
+                                    <div class="flex justify-between text-indigo-300 font-semibold pt-1 border-t border-slate-800">
+                                        <span>Depreciação por Hora:</span> <span>R$ ${custoHoraDeprec}/h</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800/80">
+                                <button onclick="editarEquipamento('${eq.id}')" class="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded-lg transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                <button onclick="deletarEquipamento('${eq.id}')" class="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            if (extras.length === 0) {
+                gridExtras.innerHTML = `<div class="col-span-full p-6 text-center text-slate-500 bg-slate-900/50 rounded-xl border border-slate-800">Nenhum equipamento extra cadastrado.</div>`;
+            } else {
+                extras.forEach(eq => {
+                    const custoHoraDeprec = (eq.valorCompra / (eq.vidaUtilHoras || 1)).toFixed(2);
+                    gridExtras.innerHTML += `
+                        <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl flex flex-col justify-between space-y-4">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-bold text-slate-100 text-lg">${eq.nome}</h4>
+                                    <span class="text-[10px] bg-purple-500/10 text-purple-400 font-bold px-2 py-1 rounded-md border border-purple-500/20">Apoio / Cura</span>
+                                </div>
+                                <div class="mt-3 space-y-1.5 text-xs text-slate-400">
+                                    <div class="flex justify-between"><span>Valor Compra:</span> <span class="text-slate-200 font-semibold">R$ ${eq.valorCompra.toFixed(2)}</span></div>
+                                    <div class="flex justify-between"><span>Vida Útil:</span> <span class="text-slate-200 font-semibold">${eq.vidaUtilHoras} hrs</span></div>
+                                    <div class="flex justify-between"><span>Consumo:</span> <span class="text-slate-200 font-semibold">${eq.consumoWatts} W</span></div>
+                                    <div class="flex justify-between text-purple-300 font-semibold pt-1 border-t border-slate-800">
+                                        <span>Depreciação por Hora:</span> <span>R$ ${custoHoraDeprec}/h</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800/80">
+                                <button onclick="editarEquipamento('${eq.id}')" class="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded-lg transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                <button onclick="deletarEquipamento('${eq.id}')" class="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            lucide.createIcons();
+        }
+
+        function openModalEquipamento() {
+            document.getElementById('formEquipamento').reset();
+            document.getElementById('equipId').value = '';
+            document.getElementById('modalEquipamentoTitulo').innerText = 'Novo Equipamento';
+            openModal('modalEquipamento');
+        }
+
+        function editarEquipamento(id) {
+            const eq = appData.equipamentos.find(item => item.id === id);
+            if (!eq) return;
+
+            document.getElementById('equipId').value = eq.id;
+            document.getElementById('equipNome').value = eq.nome;
+            document.getElementById('equipCategoria').value = eq.categoria;
+            document.getElementById('equipValorCompra').value = eq.valorCompra;
+            document.getElementById('equipVidaUtilHoras').value = eq.vidaUtilHoras;
+            document.getElementById('equipConsumoWatts').value = eq.consumoWatts;
+
+            document.getElementById('modalEquipamentoTitulo').innerText = 'Editar Equipamento';
+            openModal('modalEquipamento');
+        }
+
+        function salvarEquipamento(e) {
+            e.preventDefault();
+            const id = document.getElementById('equipId').value;
+            const nome = document.getElementById('equipNome').value;
+            const categoria = document.getElementById('equipCategoria').value;
+            const valorCompra = parseFloat(document.getElementById('equipValorCompra').value) || 0;
+            const vidaUtilHoras = parseFloat(document.getElementById('equipVidaUtilHoras').value) || 1;
+            const consumoWatts = parseFloat(document.getElementById('equipConsumoWatts').value) || 0;
+
+            if (id) {
+                const idx = appData.equipamentos.findIndex(item => item.id === id);
+                if (idx !== -1) {
+                    appData.equipamentos[idx] = { id, nome, categoria, valorCompra, vidaUtilHoras, consumoWatts };
+                }
+            } else {
+                appData.equipamentos.push({
+                    id: 'eq_' + Date.now(),
+                    nome, categoria, valorCompra, vidaUtilHoras, consumoWatts
+                });
+            }
+
+            saveData();
+            closeModal('modalEquipamento');
+            renderEquipamentos();
+        }
+
+        function deletarEquipamento(id) {
+            if (confirm("Tem certeza que deseja excluir este equipamento?")) {
+                appData.equipamentos = appData.equipamentos.filter(item => item.id !== id);
+                saveData();
+                renderEquipamentos();
+            }
+        }
+
+        // ================= ALMOXARIFADO =================
+        function renderAlmoxarifado() {
+            const gridMaterias = document.getElementById('gridMateriasPrimas');
+            const gridExtras = document.getElementById('gridInsumosExtras');
+
+            gridMaterias.innerHTML = '';
+            gridExtras.innerHTML = '';
+
+            const materias = appData.almoxarifado.filter(a => a.tipo === 'MateriaPrima');
+            const extras = appData.almoxarifado.filter(a => a.tipo === 'Extra');
+
+            if (materias.length === 0) {
+                gridMaterias.innerHTML = `<div class="col-span-full p-6 text-center text-slate-500 bg-slate-900/50 rounded-xl border border-slate-800">Nenhuma matéria-prima cadastrada.</div>`;
+            } else {
+                materias.forEach(mat => {
+                    const custoUnitario = (mat.preco / (mat.qtdComprada || 1)).toFixed(3);
+                    gridMaterias.innerHTML += `
+                        <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl flex flex-col justify-between space-y-4">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-bold text-slate-100 text-base">${mat.nome}</h4>
+                                    <span class="text-[10px] bg-emerald-500/10 text-emerald-400 font-bold px-2 py-1 rounded-md border border-emerald-500/20">Matéria-Prima</span>
+                                </div>
+                                <div class="mt-3 space-y-1.5 text-xs text-slate-400">
+                                    <div class="flex justify-between"><span>Preço Compra:</span> <span class="text-slate-200 font-semibold">R$ ${mat.preco.toFixed(2)}</span></div>
+                                    <div class="flex justify-between"><span>Estoque Atual:</span> <span class="text-slate-200 font-semibold">${mat.estoque} ${mat.unidade}</span></div>
+                                    <div class="flex justify-between text-emerald-400 font-semibold pt-1 border-t border-slate-800">
+                                        <span>Custo p/ ${mat.unidade}:</span> <span>R$ ${custoUnitario}/${mat.unidade}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800/80">
+                                <button onclick="editarInsumo('${mat.id}')" class="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded-lg transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                <button onclick="deletarInsumo('${mat.id}')" class="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            if (extras.length === 0) {
+                gridExtras.innerHTML = `<div class="col-span-full p-6 text-center text-slate-500 bg-slate-900/50 rounded-xl border border-slate-800">Nenhum insumo extra cadastrado.</div>`;
+            } else {
+                extras.forEach(ins => {
+                    const custoUnitario = (ins.preco / (ins.qtdComprada || 1)).toFixed(2);
+                    gridExtras.innerHTML += `
+                        <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl flex flex-col justify-between space-y-4">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-bold text-slate-100 text-base">${ins.nome}</h4>
+                                    <span class="text-[10px] bg-amber-500/10 text-amber-400 font-bold px-2 py-1 rounded-md border border-amber-500/20">Consumível</span>
+                                </div>
+                                <div class="mt-3 space-y-1.5 text-xs text-slate-400">
+                                    <div class="flex justify-between"><span>Preço Item:</span> <span class="text-slate-200 font-semibold">R$ ${ins.preco.toFixed(2)}</span></div>
+                                    <div class="flex justify-between"><span>Estoque:</span> <span class="text-slate-200 font-semibold">${ins.estoque} ${ins.unidade}</span></div>
+                                    <div class="flex justify-between text-amber-400 font-semibold pt-1 border-t border-slate-800">
+                                        <span>Custo Unitário:</span> <span>R$ ${custoUnitario}/${ins.unidade}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800/80">
+                                <button onclick="editarInsumo('${ins.id}')" class="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded-lg transition"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                <button onclick="deletarInsumo('${ins.id}')" class="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            lucide.createIcons();
+        }
+
+        function openModalInsumo() {
+            document.getElementById('formInsumo').reset();
+            document.getElementById('insumoId').value = '';
+            document.getElementById('modalInsumoTitulo').innerText = 'Novo Insumo';
+            openModal('modalInsumo');
+        }
+
+        function editarInsumo(id) {
+            const ins = appData.almoxarifado.find(item => item.id === id);
+            if (!ins) return;
+
+            document.getElementById('insumoId').value = ins.id;
+            document.getElementById('insumoNome').value = ins.nome;
+            document.getElementById('insumoTipo').value = ins.tipo;
+            document.getElementById('insumoPreco').value = ins.preco;
+            document.getElementById('insumoQtdComprada').value = ins.qtdComprada;
+            document.getElementById('insumoUnidade').value = ins.unidade;
+            document.getElementById('insumoEstoque').value = ins.estoque;
+
+            document.getElementById('modalInsumoTitulo').innerText = 'Editar Insumo';
+            openModal('modalInsumo');
+        }
+
+        function salvarInsumo(e) {
+            e.preventDefault();
+            const id = document.getElementById('insumoId').value;
+            const nome = document.getElementById('insumoNome').value;
+            const tipo = document.getElementById('insumoTipo').value;
+            const preco = parseFloat(document.getElementById('insumoPreco').value) || 0;
+            const qtdComprada = parseFloat(document.getElementById('insumoQtdComprada').value) || 1;
+            const unidade = document.getElementById('insumoUnidade').value;
+            const estoque = parseFloat(document.getElementById('insumoEstoque').value) || 0;
+
+            if (id) {
+                const idx = appData.almoxarifado.findIndex(item => item.id === id);
+                if (idx !== -1) {
+                    appData.almoxarifado[idx] = { id, nome, tipo, preco, qtdComprada, unidade, estoque };
+                }
+            } else {
+                appData.almoxarifado.push({
+                    id: 'alm_' + Date.now(),
+                    nome, tipo, preco, qtdComprada, unidade, estoque
+                });
+            }
+
+            saveData();
+            closeModal('modalInsumo');
+            renderAlmoxarifado();
+        }
+
+        function deletarInsumo(id) {
+            if (confirm("Tem certeza que deseja excluir este item?")) {
+                appData.almoxarifado = appData.almoxarifado.filter(item => item.id !== id);
+                saveData();
+                renderAlmoxarifado();
+            }
+        }
+
+        // ================= CADASTRO DE PROCESSO & PRECIFICAÇÃO =================
+        function popularSelectsProcesso() {
+            const selectImp = document.getElementById('procImpressora');
+            const selectEquipExtra = document.getElementById('procEquipExtra');
+            const selectMat = document.getElementById('procMateriaPrima');
+            const containerInsumos = document.getElementById('containerInsumosExtrasUsados');
+
+            selectImp.innerHTML = '<option value="">Nenhuma / Sem Impressora</option>';
+            appData.equipamentos.filter(e => e.categoria === 'Impressora 3D').forEach(eq => {
+                selectImp.innerHTML += `<option value="${eq.id}">${eq.nome}</option>`;
+            });
+
+            selectEquipExtra.innerHTML = '<option value="">Nenhum / Sem Equipamento Extra</option>';
+            appData.equipamentos.filter(e => e.categoria === 'Equipamento Extra').forEach(eq => {
+                selectEquipExtra.innerHTML += `<option value="${eq.id}">${eq.nome}</option>`;
+            });
+
+            selectMat.innerHTML = '<option value="">Selecione Matéria-Prima</option>';
+            appData.almoxarifado.filter(a => a.tipo === 'MateriaPrima').forEach(mat => {
+                selectMat.innerHTML += `<option value="${mat.id}">${mat.nome}</option>`;
+            });
+
+            // Carrega Categorias Dinâmicas da Vitrine
+            atualizarCategoriasCadastroProcesso();
+
+            containerInsumos.innerHTML = '';
+            const extras = appData.almoxarifado.filter(a => a.tipo === 'Extra');
+            if (extras.length === 0) {
+                containerInsumos.innerHTML = '<span class="text-xs text-slate-500">Nenhum insumo extra disponível.</span>';
+            } else {
+                extras.forEach(ins => {
+                    containerInsumos.innerHTML += `
+                        <div class="flex items-center justify-between text-xs text-slate-300 py-1 border-b border-slate-800/50 last:border-0">
+                            <span class="truncate max-w-[180px] sm:max-w-[220px]">${ins.nome} (R$ ${(ins.preco / (ins.qtdComprada || 1)).toFixed(2)}/${ins.unidade})</span>
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" onclick="alterarQtdInsumoExtra('${ins.id}', -1)" class="w-6 h-6 rounded bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 font-bold flex items-center justify-center text-xs transition cursor-pointer select-none">-</button>
+                                <input type="number" min="0" value="0" id="procInsumoExtra_${ins.id}" oninput="calcularPrecificacaoProcesso()" class="w-12 bg-slate-900 border border-slate-800 rounded py-0.5 text-center font-medium focus:outline-none focus:border-indigo-500 text-xs">
+                                <button type="button" onclick="alterarQtdInsumoExtra('${ins.id}', 1)" class="w-6 h-6 rounded bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 font-bold flex items-center justify-center text-xs transition cursor-pointer select-none">+</button>
+                                <span class="text-[10px] text-slate-500 w-5 text-right">${ins.unidade}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            calcularPrecificacaoProcesso();
+        }
+
+        // Função para Alternar e Carregar as Categorias na aba de Cadastro de Processo
+        function atualizarCategoriasCadastroProcesso() {
+            const selectCat = document.getElementById('procCategoriaSelect');
+            if (!selectCat) return;
+
+            const categorias = Array.from(new Set(appData.vitrine.map(p => p.categoria || 'Geral'))).sort();
+            if (!categorias.includes('Geek & Figures')) categorias.unshift('Geek & Figures');
+
+            selectCat.innerHTML = '';
+            categorias.forEach(cat => {
+                selectCat.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+        }
+
+        function alternarModoCategoria() {
+            const selectCat = document.getElementById('procCategoriaSelect');
+            const inputCat = document.getElementById('procCategoriaInput');
+            const btn = document.getElementById('btnAlternarCategoria');
+
+            criandoNovaCategoria = !criandoNovaCategoria;
+
+            if (criandoNovaCategoria) {
+                selectCat.classList.add('hidden');
+                inputCat.classList.remove('hidden');
+                inputCat.focus();
+                btn.innerText = '← Selecionar Categoria Existente';
+            } else {
+                inputCat.classList.add('hidden');
+                selectCat.classList.remove('hidden');
+                btn.innerText = '+ Criar Nova Categoria';
+            }
+        }
+
+        function alterarQtdInsumoExtra(id, delta) {
+            const inputEl = document.getElementById(`procInsumoExtra_${id}`);
+            if (inputEl) {
+                let valorAtual = parseFloat(inputEl.value) || 0;
+                valorAtual = Math.max(0, valorAtual + delta);
+                inputEl.value = valorAtual;
+                calcularPrecificacaoProcesso();
+            }
+        }
+
+        function handleProcessImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    tempProcessImage = evt.target.result;
+                    document.getElementById('previewProcFoto').innerHTML = `<img src="${tempProcessImage}" class="w-full h-full object-cover">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function handleProcessImageUrlInput(val) {
+            if (val.trim() !== '') {
+                tempProcessImage = val.trim();
+                document.getElementById('previewProcFoto').innerHTML = `<img src="${tempProcessImage}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100?text=Erro'">`;
+            }
+        }
+
+        // CÁLCULO PRINCIPAL COM DISCRIMINAÇÃO SEPARADA DE EQUIPAMENTOS EXTRAS
+        function calcularPrecificacaoProcesso() {
+            const tf = appData.tabelasFixas;
+
+            const idImp = document.getElementById('procImpressora').value;
+            const idExtra = document.getElementById('procEquipExtra').value;
+            const idMat = document.getElementById('procMateriaPrima').value;
+
+            const consumoMat = parseFloat(document.getElementById('procConsumoMat').value) || 0;
+            const perdaPct = parseFloat(document.getElementById('procPerdaPct').value) || 0;
+            
+            const nivelComplexidade = document.getElementById('procComplexidade').value || 'media';
+            const complexidadesConfig = tf.complexidades || { baixa: 10, media: 20, alta: 40, ultra: 50 };
+            const complexidadePct = complexidadesConfig[nivelComplexidade] !== undefined ? complexidadesConfig[nivelComplexidade] : 20;
+
+            // Tempo Impressora Principal
+            const impHoras = parseFloat(document.getElementById('procTempoImpHoras').value) || 0;
+            const impMinutos = parseFloat(document.getElementById('procTempoImpMinutos').value) || 0;
+            const tempoImpTotalHoras = impHoras + (impMinutos / 60);
+
+            // Tempo Equipamento Extra em Horas
+            const extraMinutos = parseFloat(document.getElementById('procTempoExtraMinutos').value) || 0;
+            const tempoExtraTotalHoras = extraMinutos / 60;
+
+            const maoHoras = parseFloat(document.getElementById('procTempoMaoHoras').value) || 0;
+            const maoMinutos = parseFloat(document.getElementById('procTempoMaoMinutos').value) || 0;
+            const tempoMaoTotalHoras = maoHoras + (maoMinutos / 60);
+
+            // 1. Custo Matéria-Prima
+            let custoMatUnitario = 0;
+            const matObj = appData.almoxarifado.find(a => a.id === idMat);
+            if (matObj) {
+                const precoPorUnidade = matObj.preco / (matObj.qtdComprada || 1);
+                custoMatUnitario = (consumoMat * (1 + (perdaPct / 100))) * precoPorUnidade;
+            }
+
+            // 2. Energia Elétrica (Impressora e Equipamento Extra Separados)
+            let custoEnergiaImp = 0;
+            let custoEnergiaExtra = 0;
+            
+            const impObj = appData.equipamentos.find(e => e.id === idImp);
+            const extraObj = appData.equipamentos.find(e => e.id === idExtra);
+
+            if (impObj) {
+                const kWhImp = (impObj.consumoWatts * tempoImpTotalHoras) / 1000;
+                custoEnergiaImp = kWhImp * tf.tarifaEnergia;
+            }
+
+            if (extraObj) {
+                const kWhExtra = (extraObj.consumoWatts * tempoExtraTotalHoras) / 1000;
+                custoEnergiaExtra = kWhExtra * tf.tarifaEnergia;
+            }
+
+            // 3. Depreciação (Impressora e Equipamento Extra Separados)
+            let custoDepreciacaoImp = 0;
+            let custoDepreciacaoExtra = 0;
+
+            if (impObj) custoDepreciacaoImp = (impObj.valorCompra / (impObj.vidaUtilHoras || 1)) * tempoImpTotalHoras;
+            if (extraObj) custoDepreciacaoExtra = (extraObj.valorCompra / (extraObj.vidaUtilHoras || 1)) * tempoExtraTotalHoras;
+
+            // 4. Insumos Extras
+            let custoInsumosExtras = 0;
+            appData.almoxarifado.filter(a => a.tipo === 'Extra').forEach(ins => {
+                const inputEl = document.getElementById(`procInsumoExtra_${ins.id}`);
+                if (inputEl) {
+                    const qtdUsada = parseFloat(inputEl.value) || 0;
+                    const custoUnitario = ins.preco / (ins.qtdComprada || 1);
+                    custoInsumosExtras += qtdUsada * custoUnitario;
+                }
+            });
+
+            // 5. Mão de Obra (+ Encargos)
+            const valorMaoObraBase = tf.custoMaoObraHora * tempoMaoTotalHoras;
+            const custoMaoObra = valorMaoObraBase * (1 + (tf.encargosSociais / 100));
+
+            // Custos Base e Adicionais
+            const custoBase = custoMatUnitario + custoEnergiaImp + custoEnergiaExtra + custoDepreciacaoImp + custoDepreciacaoExtra + custoInsumosExtras + custoMaoObra;
+            const valorAdicionalComplexidade = custoBase * (complexidadePct / 100);
+            const custoDiretoTotal = custoBase + valorAdicionalComplexidade;
+
+            // Formação de Preço
+            const somaTaxasPct = tf.taxaImposto + tf.comissaoVenda + tf.taxaCartao + tf.taxaDevolucao + tf.taxaReinvestimento;
+            const custoComEmbalagem = custoDiretoTotal + tf.custoEmbalagemEnvio;
+            const valorLucroLiquidoEfetivo = custoComEmbalagem * (tf.lucroLiquidoDesejado / 100);
+
+            const divisorTaxas = 1 - (somaTaxasPct / 100);
+            let precoSugeridoUnitario = 0;
+
+            if (divisorTaxas > 0) {
+                precoSugeridoUnitario = (custoComEmbalagem + valorLucroLiquidoEfetivo) / divisorTaxas;
+            } else {
+                precoSugeridoUnitario = (custoComEmbalagem + valorLucroLiquidoEfetivo) * 1.5;
+            }
+
+            const valImposto = precoSugeridoUnitario * (tf.taxaImposto / 100);
+            const valComissao = precoSugeridoUnitario * (tf.comissaoVenda / 100);
+            const valCartao = precoSugeridoUnitario * (tf.taxaCartao / 100);
+            const valDevolucao = precoSugeridoUnitario * (tf.taxaDevolucao / 100);
+            const valReinvestimento = precoSugeridoUnitario * (tf.taxaReinvestimento / 100);
+
+            // ATUALIZAÇÃO DOS CAMPOS DISCRIMINADOS NO DOM
+            document.getElementById('detCustoMat').innerText = `R$ ${custoMatUnitario.toFixed(2)}`;
+            document.getElementById('detCustoEnergiaImp').innerText = `R$ ${custoEnergiaImp.toFixed(2)}`;
+            document.getElementById('detCustoEnergiaExtra').innerText = `R$ ${custoEnergiaExtra.toFixed(2)}`;
+            document.getElementById('detCustoDepreciacaoImp').innerText = `R$ ${custoDepreciacaoImp.toFixed(2)}`;
+            document.getElementById('detCustoDepreciacaoExtra').innerText = `R$ ${custoDepreciacaoExtra.toFixed(2)}`;
+            document.getElementById('detCustoInsumos').innerText = `R$ ${custoInsumosExtras.toFixed(2)}`;
+            document.getElementById('detCustoMaoObra').innerText = `R$ ${custoMaoObra.toFixed(2)}`;
+
+            document.getElementById('resProcCustoTotal').innerText = `R$ ${custoDiretoTotal.toFixed(2)}`;
+            document.getElementById('resProcComplexidadeVal').innerText = `R$ ${valorAdicionalComplexidade.toFixed(2)}`;
+            document.getElementById('resProcComplexidadePct').innerText = `${complexidadePct}%`;
+
+            document.getElementById('lblTaxaImposto').innerText = `${tf.taxaImposto}%`;
+            document.getElementById('resTaxaImposto').innerText = `R$ ${valImposto.toFixed(2)}`;
+
+            document.getElementById('lblTaxaComissao').innerText = `${tf.comissaoVenda}%`;
+            document.getElementById('resTaxaComissao').innerText = `R$ ${valComissao.toFixed(2)}`;
+
+            document.getElementById('lblTaxaCartao').innerText = `${tf.taxaCartao}%`;
+            document.getElementById('resTaxaCartao').innerText = `R$ ${valCartao.toFixed(2)}`;
+
+            document.getElementById('lblTaxaDevolucao').innerText = `${tf.taxaDevolucao}%`;
+            document.getElementById('resTaxaDevolucao').innerText = `R$ ${valDevolucao.toFixed(2)}`;
+
+            document.getElementById('resCustoEmbalagem').innerText = `R$ ${tf.custoEmbalagemEnvio.toFixed(2)}`;
+
+            document.getElementById('lblTaxaReinvestimento').innerText = `${tf.taxaReinvestimento}%`;
+            document.getElementById('resTaxaReinvestimento').innerText = `R$ ${valReinvestimento.toFixed(2)}`;
+
+            document.getElementById('lblTaxaLucro').innerText = `${tf.lucroLiquidoDesejado}%`;
+            document.getElementById('resProcLucroLiquidoVal').innerText = `R$ ${valorLucroLiquidoEfetivo.toFixed(2)}`;
+
+            document.getElementById('resProcPrecoFinalUnitario').innerText = `R$ ${precoSugeridoUnitario.toFixed(2)}`;
+
+            return {
+                custoBase: custoDiretoTotal,
+                precoFinal: precoSugeridoUnitario,
+                lucroLiquido: valorLucroLiquidoEfetivo
+            };
+        }
+
+        function salvarProcessoEVitrine() {
+            const nome = document.getElementById('procNome').value.trim();
+            if (!nome) {
+                alert("Por favor, preencha o nome do produto/projeto.");
+                return;
+            }
+
+            let categoria = '';
+            if (criandoNovaCategoria) {
+                categoria = document.getElementById('procCategoriaInput').value.trim();
+            } else {
+                categoria = document.getElementById('procCategoriaSelect').value.trim();
+            }
+
+            if (!categoria) categoria = 'Geral';
+
+            const res = calcularPrecificacaoProcesso();
+            const fotoFinal = tempProcessImage || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=400&q=80';
+
+            const novoProd = {
+                id: 'vit_' + Date.now(),
+                nome: nome,
+                categoria: categoria,
+                foto: fotoFinal,
+                custoBase: res.custoBase,
+                precoFinal: res.precoFinal,
+                lucroLiquido: res.lucroLiquido,
+                estoque: 1
+            };
+
+            appData.vitrine.push(novoProd);
+            saveData();
+
+            alert(`Produto "${nome}" cadastrado com sucesso na categoria "${categoria}" e publicado na Vitrine!`);
+            
+            document.getElementById('procNome').value = '';
+            tempProcessImage = '';
+            document.getElementById('previewProcFoto').innerHTML = `<i data-lucide="image" class="w-6 h-6 text-slate-600"></i>`;
+            
+            // Reseta input de categoria
+            if (criandoNovaCategoria) {
+                alternarModoCategoria();
+                document.getElementById('procCategoriaInput').value = '';
+            }
+
+            switchTab('vitrine', document.querySelectorAll('.tab-btn')[4]);
+        }
+
+        // ================= VITRINE =================
+        function atualizarOpcoesCategoriasVitrine() {
+            const selectCat = document.getElementById('vitrineFiltroCategoria');
+            if (!selectCat) return;
+
+            const categoriaAtual = selectCat.value || 'todas';
+            const categorias = Array.from(new Set(appData.vitrine.map(p => p.categoria || 'Geral'))).sort();
+
+            selectCat.innerHTML = '<option value="todas">Todas as Categorias</option>';
+            categorias.forEach(cat => {
+                selectCat.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+
+            selectCat.value = categorias.includes(categoriaAtual) ? categoriaAtual : 'todas';
+        }
+
+        function alterarEstoqueVitrine(id, delta) {
+            const prod = appData.vitrine.find(p => p.id === id);
+            if (prod) {
+                const novoEstoque = Math.max(0, (prod.estoque || 0) + delta);
+                prod.estoque = novoEstoque;
+                saveData();
+                renderVitrine();
+            }
+        }
+
+        function renderVitrine() {
+            const grid = document.getElementById('gridVitrine');
+            grid.innerHTML = '';
+
+            const buscaNome = (document.getElementById('vitrineBuscaNome')?.value || '').toLowerCase().trim();
+            const filtroCat = document.getElementById('vitrineFiltroCategoria')?.value || 'todas';
+
+            const produtosFiltrados = appData.vitrine.filter(prod => {
+                const combinaNome = prod.nome.toLowerCase().includes(buscaNome);
+                const combinaCategoria = filtroCat === 'todas' || prod.categoria === filtroCat;
+                return combinaNome && combinaCategoria;
+            });
+
+            if (appData.vitrine.length === 0) {
+                grid.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 bg-slate-900/50 rounded-2xl border border-slate-800">Sua vitrine está vazia. Cadastre produtos no "Cadastro de Processo".</div>`;
+                return;
+            }
+
+            if (produtosFiltrados.length === 0) {
+                grid.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 bg-slate-900/50 rounded-2xl border border-slate-800">Nenhum produto encontrado.</div>`;
+                return;
+            }
+
+            produtosFiltrados.forEach(prod => {
+                const estoque = prod.estoque !== undefined ? prod.estoque : 0;
+                
+                // Definição das bordas e efeito P&B (Preto e Branco)
+                let borderClass = 'border-emerald-500/80 hover:border-emerald-400';
+                let bwClass = '';
+
+                if (estoque === 0) {
+                    borderClass = 'border-slate-800/80';
+                    bwClass = 'grayscale opacity-75'; // Card totalmente preto e branco ao zerar
+                } else if (estoque < 3) {
+                    borderClass = 'border-red-500 hover:border-red-400'; // Abaixo de 3 unds
+                } else if (estoque >= 3 && estoque <= 4) {
+                    borderClass = 'border-amber-400 hover:border-amber-300'; // Entre 3 e 4 unds
+                } else {
+                    borderClass = 'border-emerald-400/80 hover:border-emerald-300'; // Acima de 5 unds (e 5)
+                }
+
+                grid.innerHTML += `
+                    <div class="bg-slate-900 rounded-2xl border-2 ${borderClass} ${bwClass} overflow-hidden shadow-xl flex flex-col justify-between group transition duration-300">
+                        <div>
+                            <div class="h-44 w-full bg-slate-950 relative overflow-hidden">
+                                <img src="${prod.foto}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/400x300/1e293b/818cf8?text=Impressao+3D'">
+                                <span class="absolute top-3 left-3 text-[10px] bg-slate-900/80 backdrop-blur-md text-indigo-300 font-bold px-2.5 py-1 rounded-full border border-indigo-500/20">${prod.categoria}</span>
+                            </div>
+                            <div class="p-5 space-y-3">
+                                <h4 class="font-bold text-slate-100 text-lg leading-snug">${prod.nome}</h4>
+                                <div class="space-y-1.5 text-xs">
+                                    <div class="flex justify-between text-slate-400">
+                                        <span>Custo Direto:</span>
+                                        <span class="text-slate-300 font-semibold">R$ ${prod.custoBase.toFixed(2)}</span>
+                                    </div>
+                                    <div class="flex justify-between text-emerald-400 font-semibold">
+                                        <span>Lucro Líquido:</span>
+                                        <span>R$ ${prod.lucroLiquido.toFixed(2)}</span>
+                                    </div>
+                                    <!-- ESTOQUE COM CONTROLES - E + LOGO ABAIXO DO LUCRO LÍQUIDO -->
+                                    <div class="flex justify-between items-center text-slate-300 font-semibold pt-1">
+                                        <span>Estoque:</span>
+                                        <div class="flex items-center gap-1.5 bg-slate-950 px-2 py-1 rounded-lg border border-slate-800">
+                                            <button onclick="alterarEstoqueVitrine('${prod.id}', -1)" class="w-5 h-5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold flex items-center justify-center text-xs transition cursor-pointer select-none">-</button>
+                                            <span class="font-extrabold px-1 min-w-[20px] text-center text-indigo-300 text-xs">${estoque} unds</span>
+                                            <button onclick="alterarEstoqueVitrine('${prod.id}', 1)" class="w-5 h-5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold flex items-center justify-center text-xs transition cursor-pointer select-none">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="pt-2 border-t border-slate-800 flex justify-between items-baseline">
+                                    <span class="text-xs text-slate-400">Preço Venda:</span>
+                                    <span class="text-xl font-extrabold text-white">R$ ${prod.precoFinal.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-5 pt-0 flex gap-2">
+                            <button onclick="abrirModalPedidoRapido('${prod.id}')" ${estoque === 0 ? 'disabled' : ''} class="flex-1 ${estoque === 0 ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-500 text-white'} font-semibold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+                                <i data-lucide="shopping-cart" class="w-4 h-4"></i> ${estoque === 0 ? 'Esgotado' : 'Gerar Pedido'}
+                            </button>
+                            <button onclick="deletarVitrine('${prod.id}')" class="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-xl transition">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            lucide.createIcons();
+        }
+
+        function deletarVitrine(id) {
+            if (confirm("Remover este produto da vitrine?")) {
+                appData.vitrine = appData.vitrine.filter(p => p.id !== id);
+                saveData();
+                atualizarOpcoesCategoriasVitrine();
+                renderVitrine();
+            }
+        }
+
+        // ================= PEDIDOS =================
+        function renderPedidos() {
+            const corpo = document.getElementById('tabelaPedidosCorpo');
+            corpo.innerHTML = '';
+
+            let faturamento = 0;
+            let lucroTotal = 0;
+            let emProducao = 0;
+            let concluidos = 0;
+
+            if (appData.pedidos.length === 0) {
+                corpo.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">Nenhum pedido registrado até o momento.</td></tr>`;
+            } else {
+                appData.pedidos.forEach(ped => {
+                    faturamento += ped.valorTotal;
+                    lucroTotal += ped.lucroLiquidoTotal;
+                    if (ped.status === 'Em Produção') emProducao++;
+                    if (ped.status === 'Concluído' || ped.status === 'Entregue') concluidos++;
+
+                    let badgeColor = 'bg-slate-800 text-slate-300 border-slate-700';
+                    if (ped.status === 'Orçamento') badgeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                    if (ped.status === 'Em Produção') badgeColor = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+                    if (ped.status === 'Concluído') badgeColor = 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+                    if (ped.status === 'Entregue') badgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+
+                    corpo.innerHTML += `
+                        <tr class="hover:bg-slate-850 transition">
+                            <td class="px-6 py-4 font-semibold text-slate-100">${ped.cliente}</td>
+                            <td class="px-6 py-4">${ped.produtoNome}</td>
+                            <td class="px-6 py-4 font-semibold">${ped.qtd}</td>
+                            <td class="px-6 py-4 font-bold text-slate-100">R$ ${ped.valorTotal.toFixed(2)}</td>
+                            <td class="px-6 py-4 font-semibold text-emerald-400">R$ ${ped.lucroLiquidoTotal.toFixed(2)}</td>
+                            <td class="px-6 py-4">
+                                <select onchange="alterarStatusPedido('${ped.id}', this.value)" class="bg-slate-950 text-xs font-semibold px-3 py-1.5 rounded-lg border focus:outline-none ${badgeColor}">
+                                    <option value="Orçamento" ${ped.status === 'Orçamento' ? 'selected' : ''}>Orçamento</option>
+                                    <option value="Em Produção" ${ped.status === 'Em Produção' ? 'selected' : ''}>Em Produção</option>
+                                    <option value="Concluído" ${ped.status === 'Concluído' ? 'selected' : ''}>Concluído</option>
+                                    <option value="Entregue" ${ped.status === 'Entregue' ? 'selected' : ''}>Entregue</option>
+                                </select>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button onclick="deletarPedido('${ped.id}')" class="text-slate-500 hover:text-red-400 p-1 rounded transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            document.getElementById('statFaturamento').innerText = `R$ ${faturamento.toFixed(2)}`;
+            document.getElementById('statLucroTotal').innerText = `R$ ${lucroTotal.toFixed(2)}`;
+            document.getElementById('statEmProducao').innerText = emProducao;
+            document.getElementById('statConcluidos').innerText = concluidos;
+
+            lucide.createIcons();
+        }
+
+        function abrirModalPedidoRapido(prodId) {
+            const prod = appData.vitrine.find(p => p.id === prodId);
+            if (!prod) return;
+
+            document.getElementById('pedProdId').value = prod.id;
+            document.getElementById('pedProdNome').value = prod.nome;
+            document.getElementById('pedCliente').value = '';
+            document.getElementById('pedQtd').value = 1;
+            document.getElementById('pedPrecoUnit').value = prod.precoFinal.toFixed(2);
+
+            atualizarResumoPedido();
+            openModal('modalPedido');
+        }
+
+        function atualizarResumoPedido() {
+            const prodId = document.getElementById('pedProdId').value;
+            const prod = appData.vitrine.find(p => p.id === prodId);
+            const qtd = parseInt(document.getElementById('pedQtd').value) || 1;
+            const precoUnit = parseFloat(document.getElementById('pedPrecoUnit').value) || 0;
+
+            const total = qtd * precoUnit;
+            let lucroTotal = 0;
+
+            if (prod) {
+                const lucroUnit = prod.lucroLiquido || 0;
+                lucroTotal = qtd * lucroUnit;
+            }
+
+            document.getElementById('pedResumoTotal').innerText = `R$ ${total.toFixed(2)}`;
+            document.getElementById('pedResumoLucro').innerText = `R$ ${lucroTotal.toFixed(2)}`;
+        }
+
+        function salvarNovoPedido(e) {
+            e.preventDefault();
+            const prodId = document.getElementById('pedProdId').value;
+            const prod = appData.vitrine.find(p => p.id === prodId);
+
+            const cliente = document.getElementById('pedCliente').value.trim();
+            const qtd = parseInt(document.getElementById('pedQtd').value) || 1;
+            const precoUnitario = parseFloat(document.getElementById('pedPrecoUnit').value) || 0;
+
+            const valorTotal = qtd * precoUnitario;
+            const lucroLiquidoUnit = prod ? prod.lucroLiquido : 0;
+            const lucroLiquidoTotal = qtd * lucroLiquidoUnit;
+
+            // Abate automaticamente do estoque na vitrine se disponível
+            if (prod && prod.estoque !== undefined) {
+                prod.estoque = Math.max(0, prod.estoque - qtd);
+            }
+
+            appData.pedidos.push({
+                id: 'ped_' + Date.now(),
+                cliente,
+                produtoNome: prod ? prod.nome : 'Produto Customizado',
+                qtd,
+                precoUnitario,
+                valorTotal,
+                lucroLiquidoTotal,
+                status: 'Em Produção',
+                data: new Date().toISOString().split('T')[0]
+            });
+
+            saveData();
+            closeModal('modalPedido');
+            switchTab('pedidos', document.querySelectorAll('.tab-btn')[5]);
+        }
+
+        function alterarStatusPedido(id, novoStatus) {
+            const ped = appData.pedidos.find(p => p.id === id);
+            if (ped) {
+                ped.status = novoStatus;
+                saveData();
+                renderPedidos();
+            }
+        }
+
+        function deletarPedido(id) {
+            if (confirm("Tem certeza que deseja excluir este pedido?")) {
+                appData.pedidos = appData.pedidos.filter(p => p.id !== id);
+                saveData();
+                renderPedidos();
+            }
+        }
+
+        window.onload = function() {
+            loadTabelasFixas();
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
